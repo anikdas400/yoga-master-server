@@ -37,8 +37,10 @@ async function run() {
     const enrolledCollection = database.collection("enrolled");
     const appliedCollection = database.collection("applied");
 
-    // CLASSES ROUTE HERE
-    
+    // ...........CLASSES ROUTES ...........
+
+    // add new-class in database
+
     app.post('/new-class',async(req,res)=>{
       const newClass = req.body;
       // newClass.availableSeats = parseInt(newClass.availableSeats);
@@ -104,7 +106,7 @@ async function run() {
       const query = {_id: new ObjectId(id)};
       const result = await classCollection.findOne(query);
       res.send(result)
-    })
+    });
 
     // update class details (all data)
 
@@ -126,7 +128,60 @@ async function run() {
       };
       const result = await classCollection.updateOne(filter,updateDoc,options);
       res.send(result)
-    })
+    });
+
+
+
+    // ...........CARTS ROUTES.........
+
+    // add-to-cart in database
+
+    app.post('/add-to-cart', async(req,res)=>{
+      const newCartItem = req.body;
+      const result = await cartCollection.insertOne(newCartItem);
+      res.send(result)
+    });
+
+    // get cartItem by id
+
+    app.get('/add-to-cart/:id', async(req,res)=>{
+      const id = req.params.id;
+      const email = req.body.email;
+      const query ={
+        classId : id,
+        userMail : email
+      }
+
+      const options ={
+        projection: { classId : 1 },
+      };
+      const result = await cartCollection.findOne(query,options);
+      res.send(result)
+
+
+    });
+
+    // cart info by user email
+
+    app.get('/cart/:email', async(req,res)=>{
+      const email = req.params.email;
+      const query = {userMail: email};
+      const projection = {classId : 1};
+      const carts = await cartCollection.find(query, {projection: projection});
+      const classIds = carts.map((cart)=> new ObjectId(cart.classIds));
+      const query2 = {_id: {$in: classIds}};
+      const result = await classCollection.find(query2).toArray();
+      res.send(result);
+    });
+
+    // delete cart item
+
+    app.delete('/delete-cart-item/:id', async(req,res)=>{
+      const id = req.params.id;
+      const query = {classId: id};
+      const result = await cartCollection.deleteOne(query);
+      res.send(result)
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
