@@ -222,7 +222,7 @@ async function run() {
       const classesQuery = {_id:{$in: classesId.map(id => new ObjectId(id))}};
       const classes = await classCollection.find(classesQuery).toArray();
       const newEnrolledData = {
-        userMail: userEmail,
+        userEmail: userEmail,
         classId: signleClassId.map(id=> new ObjectId(id)),
         trasnsactionId: paymentInfo.trasnsactionId
       };
@@ -243,6 +243,25 @@ async function run() {
       res.send({paymentResult,deletedResult,enrolledResult,updatedResult})
 
     });
+
+    // get payment history
+
+    app.get("/payment-history/:email", async(req,res)=>{
+      const email = req.params.email;
+      const query ={userEmail: email};
+      const result = await paymentCollection.find(query).sort({date: -1}).toArray();
+      res.send(result)
+    });
+
+    // get payment history length
+
+    app.get("/payment-history-length/:email", async(req,res)=>{
+      const email = req.params.email;
+      const query ={userEmail: email};
+      const total = await paymentCollection.countDocuments(query);
+      res.send({total});
+    });
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
