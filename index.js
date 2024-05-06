@@ -263,6 +263,56 @@ async function run() {
     });
 
 
+
+    // .......Enrollment Routes.......
+
+
+
+    app.get("/popular_classes", async(req,res)=>{
+      const result = await classCollection.find().sort({totalEnrolled: -1}).limit(6).toArray();
+      res.send(result)
+    });
+
+    // get with instructors
+
+    app.get("/popular-instructors", async(req,res)=>{
+      const pipeline =[
+        {
+          $group:{
+            _id:"$instructorEmail",
+            totalEnrolled:{$sum: "$totalEnrolled"}
+          }
+        },
+        {
+          $lookup:{
+            from: "users",
+            localField: "_id",
+            foreignField: "email",
+            as:"instructor"
+          }
+        },
+        {
+          $project:{
+            _id: 0,
+            instructor:["$instructor",0]
+          },
+          totalEnrolled: 1
+        },
+        {
+          $sort:{
+            totalEnrolled: -1
+          }
+        },
+        {
+          $limit:6
+        }
+      ];
+
+      const result = await classCollection.aggregate(pipeline).toArray();
+      res.send(result);
+    });
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
