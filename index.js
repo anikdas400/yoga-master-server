@@ -312,6 +312,22 @@ async function run() {
       res.send(result);
     });
 
+    // .......Admin Routes........
+
+    // admin status
+
+    app.get('/admin-status', async(req,res)=>{
+      const approvedClasses = (await classCollection.find({status: "approved"}).toArray()).length;
+      const pendingClasses = (await classCollection.find({status: "pending"}).toArray()).length;
+      const instructors = (await userCollection.find().toArray()).length;
+      const totalClasses = (await classCollection.find().toArray()).length;
+      const totalEnrolled = (await enrolledCollection.find().toArray()).length;
+
+      const result = { approvedClasses,pendingClasses,instructors,totalClasses,totalEnrolled}
+
+      res.send(result);
+    });
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
